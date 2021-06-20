@@ -41,6 +41,7 @@ class Config(object):
         self.num_layers = 2  # lstm层数
         self.d_k = 64
         self.d_v = 64
+        self.n_head = 1
         self.attn_dropout = 0.1
 
 
@@ -110,7 +111,7 @@ class MultiHeadAttention(nn.Module):
 
 class Model(nn.Module):
     def __init__(self, config):
-        super(self).__init__()
+        super().__init__()
         if config.embedding_pretrained is not None:
             self.embedding = nn.Embedding.from_pretrained(config.embedding_pretrained, freeze=False)
         else:
@@ -119,14 +120,17 @@ class Model(nn.Module):
                             bidirectional=True, batch_first=True, dropout=config.dropout)
         self.self_attention = MultiHeadAttention(config.n_head, config.hidden_size, config.d_k, config.d_v,
                                                  config.attn_dropout)
+        self.pool = nn.AdaptiveAvgPool1d(1)
         self.fc1 = nn.Linear(config.hidden_size * 2, config.hidden_size)
-        self.fc2 = nn.Linear(config.n_head * config.d_v, config.num_classes)
+        self.pool = nn.AdaptiveAvgPool1d(1)
+        self.fc2 = nn.Linear(config.hidden_size, config.num_classes)
 
     def forward(self, x):
         x, _ = x
         emb = self.embedding(x)  # [batch_size, seq_len, embeding]=[128, 32, 300]
         out, _ = self.lstm(emb)  # [batch_size, seq_len, hidden_size * num_direction]=[128, 32, 256]
-        out = self.fc1(out[:, -1, :])  # [128, 64]
-        out = self.self_attention(out, out, out)
+        out = self.fc1(out)  # [128, 64]
+        out, _ = self.self_attention(out, out, out)
+        out = self.pool(out.transpose(1, 2).contiguous()).squeeze(-1)
         out = self.fc2(out)
         return out

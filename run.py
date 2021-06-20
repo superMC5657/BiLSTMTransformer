@@ -7,11 +7,10 @@ from importlib import import_module
 import argparse
 
 parser = argparse.ArgumentParser(description='Chinese Text Classification')
-parser.add_argument('--model',default='TextRNN_selfAtt', type=str, help='choose a model: TextRNN,FastText,TextRNN_Att')
+parser.add_argument('--model', default='TextRNN_selfAtt', type=str, help='choose a model: TextRNN,FastText,TextRNN_Att')
 parser.add_argument('--embedding', default='pre_trained', type=str, help='random or pre_trained')
 parser.add_argument('--word', default=True, type=bool, help='True for word, False for char')
 args = parser.parse_args()
-
 
 if __name__ == '__main__':
     dataset = 'weibo'  # 数据集
@@ -23,6 +22,7 @@ if __name__ == '__main__':
     model_name = args.model  # 'FastText'  # TextRNN,TextRNN_Att
     if model_name == 'FastText':
         from utils_fasttext import build_dataset, build_iterator, get_time_dif
+
         embedding = 'random'
     else:
         from utils import build_dataset, build_iterator, get_time_dif
@@ -46,7 +46,7 @@ if __name__ == '__main__':
     # train
     config.n_vocab = len(vocab)
     model = x.Model(config).to(config.device)
-    if model_name != 'Transformer':
+    if model_name not in ('Transformer', 'TextRNN_selfAtt'):
         init_network(model)
     print(model.parameters)
     train(config, model, train_iter, dev_iter, test_iter)
