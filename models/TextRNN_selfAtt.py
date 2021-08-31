@@ -122,7 +122,6 @@ class Model(nn.Module):
                                                  config.attn_dropout)
         self.pool = nn.AdaptiveAvgPool1d(1)
         self.fc1 = nn.Linear(config.hidden_size * 2, config.hidden_size)
-        self.pool = nn.AdaptiveAvgPool1d(1)
         self.fc2 = nn.Linear(config.hidden_size, config.num_classes)
 
     def forward(self, x):
